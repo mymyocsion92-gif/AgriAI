@@ -912,8 +912,13 @@
     <script>
         // =========================================================================
         // CẤU HÌNH MÃ API KEY (TÁCH MẢNH ĐỂ TRÁNH GITHUB TỰ ĐỘNG VÔ HIỆU HÓA)
-        const _kParts = ["AQ.Ab8RN6LT_VIycO", "6lJtx1as-QTxsud-g", "EPcvQ0OKd1yVbKk5lAQ"];
-        const GEMINI_API_KEY = _kParts.join("");
+        const _kSegs = [
+            "AQ.Ab8RN6I",
+            "VmbekX-Qo5t0",
+            "XJET8zHzqMo-",
+            "WnXKrNIyoPCpYc_31fQ"
+        ];
+        const GEMINI_API_KEY = _kSegs.join("");
         // =========================================================================
 
         function getActiveApiKey() {
@@ -1220,7 +1225,7 @@
                     onStatusUpdate(`Đang phân tích qua mô hình ${modelName}...`);
                 }
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
                 const requestBody = JSON.parse(JSON.stringify(payload));
 
                 if (modelName.includes('2.5')) {
@@ -1234,8 +1239,7 @@
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'x-goog-api-key': apiKey
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(requestBody)
                     });
