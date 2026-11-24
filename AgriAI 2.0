@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriAI - Bạn đồng hành cùng nhà nông trên hành trình phát triển nông nghiệp bền vững</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        amber: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng tia quét AI trên ảnh */
+        @keyframes scanline {
+            0% { top: 0%; opacity: 0.85; }
+            50% { top: 96%; opacity: 1; }
+            100% { top: 0%; opacity: 0.85; }
+        }
+        .animate-scan {
+            animation: scanline 2.2s infinite ease-in-out;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-800 font-sans antialiased selection:bg-emerald-200 selection:text-emerald-900">
+
+    <!-- ================= KHUNG THÔNG BÁO (TOAST) ================= -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- ================= THANH ĐIỀU HƯỚNG (HEADER) ================= -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 sm:h-20">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                        <i class="fa-solid fa-seedling text-xl sm:text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-emerald-800 to-teal-600 bg-clip-text text-transparent">AgriAI</span>
+                            <span class="px-2 py-0.5 text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-200">NÔNG NGHIỆP SỐ</span>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-gray-500 font-medium hidden sm:block">Bạn đồng hành cùng nhà nông trên hành trình phát triển nông nghiệp bền vững</p>
+                    </div>
+                </div>
+
+                <!-- Menu Máy tính -->
+                <nav class="hidden lg:flex items-center space-x-1 bg-gray-100/80 p-1.5 rounded-2xl">
+                    <button onclick="switchTab('home')" id="nav-home" class="nav-btn active px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 bg-white text-emerald-700 shadow-sm">
+                        <i class="fa-solid fa-house mr-1.5"></i>Trang chủ
+                    </button>
+                    <button onclick="switchTab('ai-doctor')" id="nav-ai-doctor" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-emerald-700 transition-all duration-200">
+                        <i class="fa-solid fa-camera-retro mr-1.5 text-emerald-600"></i>AI Chuẩn Đoán
+                    </button>
+                    <button onclick="switchTab('weather-calendar')" id="nav-weather-calendar" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-emerald-700 transition-all duration-200">
+                        <i class="fa-solid fa-cloud-sun-rain mr-1.5"></i>Thời tiết & Lịch vụ
+                    </button>
+                    <button onclick="switchTab('market-pest')" id="nav-market-pest" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-emerald-700 transition-all duration-200">
+                        <i class="fa-solid fa-chart-line mr-1.5"></i>Giá & Dịch hại
+                    </button>
+                    <button onclick="switchTab('community')" id="nav-community" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-emerald-700 transition-all duration-200">
+                        <i class="fa-solid fa-comments mr-1.5"></i>Hỏi đáp kỹ sư
+                    </button>
+                </nav>
+
+                <!-- Nút hành động nhanh & Menu Điện thoại -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchTab('ai-doctor')" class="hidden sm:flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md shadow-emerald-200 transition-all active:scale-95">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        <span>Quét Bệnh Ngay</span>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="lg:hidden p-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200" aria-label="Mở menu">
+                        <i class="fa-solid fa-bars text-lg" id="mobile-menu-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Điện thoại -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-gray-100 px-4 pt-2 pb-4 space-y-1 shadow-lg">
+            <button onclick="switchTab('home'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 flex items-center">
+                <i class="fa-solid fa-house w-6"></i> Trang chủ tổng quan
+            </button>
+            <button onclick="switchTab('ai-doctor'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center">
+                <i class="fa-solid fa-camera-retro w-6 text-emerald-600"></i> AI Chuẩn Đoán Bệnh Cây
+            </button>
+            <button onclick="switchTab('weather-calendar'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center">
+                <i class="fa-solid fa-cloud-sun-rain w-6 text-blue-600"></i> Thời tiết & Lịch công tác
+            </button>
+            <button onclick="switchTab('market-pest'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center">
+                <i class="fa-solid fa-chart-line w-6 text-amber-600"></i> Giá nông sản & Cảnh báo dịch
+            </button>
+            <button onclick="switchTab('community'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center">
+                <i class="fa-solid fa-comments w-6 text-purple-600"></i> Hỏi đáp cùng Kỹ sư
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= NỘI DUNG CHÍNH ================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 min-h-screen">
+
+        <!-- ========================================================== -->
+        <!-- TAB 1: TRANG CHỦ TỔNG QUAN                                 -->
+        <!-- ========================================================== -->
+        <section id="tab-home" class="tab-content space-y-10">
+            <!-- Hero Banner -->
+            <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white shadow-xl">
+                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                <div class="relative grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-10 lg:p-12 items-center">
+                    <div class="lg:col-span-7 space-y-5">
+                        <div class="inline-flex items-center space-x-2 bg-emerald-700/60 border border-emerald-500/40 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium text-emerald-100">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span>Ứng dụng Trí tuệ nhân tạo hỗ trợ nông dân Thăng Bình</span>
+                        </div>
+                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                            AgriAI – Bạn đồng hành cùng nhà nông phát triển <span class="text-amber-300">nông nghiệp bền vững</span>
+                        </h1>
+                        <p class="text-emerald-100 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl">
+                            Giải pháp chuyển đổi số toàn diện cho bà con nông dân vùng đất Thăng Bình. Nhận diện nhanh sâu bệnh hại trên lúa, hồ tiêu, đậu phộng, cây ăn quả chỉ qua 1 bức ảnh chụp, kết hợp dự báo thời tiết và lịch thời vụ chính xác.
+                        </p>
+                        <div class="flex flex-wrap gap-3 pt-2">
+                            <button onclick="switchTab('ai-doctor')" class="bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-amber-900/30 transition-all flex items-center space-x-2 active:scale-95">
+                                <i class="fa-solid fa-camera text-lg"></i>
+                                <span>Chẩn Đoán Bệnh Bằng AI</span>
+                            </button>
+                            <button onclick="switchTab('weather-calendar')" class="bg-white/15 hover:bg-white/25 text-white border border-white/25 font-semibold px-6 py-3.5 rounded-2xl backdrop-blur-sm transition-all flex items-center space-x-2">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                <span>Xem Thời Tiết & Lịch Vụ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ thông tin nhanh bên phải Hero -->
+                    <div class="lg:col-span-5">
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 space-y-5">
+                            <div class="flex items-start justify-between border-b border-white/15 pb-4 gap-3">
+                                <div>
+                                    <p class="text-xs text-emerald-200 uppercase font-semibold tracking-wider">Khu vực trọng điểm</p>
+                                    <h3 class="text-lg font-bold text-white">Thăng Bình, Đà Nẵng</h3>
+                                    <p id="hero-current-date" class="text-xs text-amber-300 font-semibold mt-1">Đang cập nhật thứ, ngày...</p>
+                                    <p id="hero-live-clock" class="text-xs text-emerald-100 font-mono mt-0.5 flex items-center">
+                                        <i class="fa-regular fa-clock mr-1.5 text-amber-300"></i> --:--:--
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-2xl sm:text-3xl font-extrabold text-amber-300" id="hero-weather-temp">29°C</span>
+                                    <p class="text-xs text-emerald-100 mt-0.5" id="hero-weather-desc">Nắng nhẹ • Độ ẩm 82%</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-emerald-950/50 p-3.5 rounded-2xl border border-emerald-700/40">
+                                    <div class="text-amber-400 text-xl font-extrabold">Gemini AI</div>
+                                    <div class="text-xs text-emerald-100 mt-0.5">Phân tích ảnh bệnh trực tiếp</div>
+                                </div>
+                                <div class="bg-emerald-950/50 p-3.5 rounded-2xl border border-emerald-700/40">
+                                    <div class="text-emerald-300 text-xl font-extrabold">24+ Bệnh</div>
+                                    <div class="text-xs text-emerald-100 mt-0.5">Lúa, Tiêu, Đậu phộng, Rau</div>
+                                </div>
+                            </div>
+
+                            <div class="bg-amber-500/20 border border-amber-400/40 rounded-2xl p-3.5 flex items-start space-x-3">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-300 mt-1"></i>
+                                <div class="text-xs text-amber-100 leading-relaxed">
+                                    <strong class="text-white block">Cảnh báo dịch hại tuần này:</strong>
+                                    Đang xuất hiện rầy nâu và bệnh đạo ôn lá rải rác trên trà lúa tại các xã Bình Nguyên, Bình Quý, Bình An.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 Tính năng cốt lõi -->
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6">
+                    <div>
+                        <span class="text-emerald-600 font-bold text-xs uppercase tracking-wider">Hệ sinh thái tính năng</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">Công Cụ Hỗ Trợ Nhà Nông Toàn Diện</h2>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2 sm:mt-0">Chạm vào từng thẻ để truy cập nhanh chức năng</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <!-- Tính năng 1 -->
+                    <div onclick="switchTab('ai-doctor')" class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 hover:border-emerald-200 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-microscope"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-emerald-700">AI Nhận Diện Bệnh</h3>
+                            <p class="text-sm text-gray-600 mt-2 leading-relaxed">Tải ảnh hoặc chụp trực tiếp lá, thân, rễ cây bị bệnh. AI phân tích và đưa ra phác đồ điều trị sinh học & hóa học.</p>
+                        </div>
+                        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center text-emerald-600 font-semibold text-sm">
+                            <span>Bắt đầu quét ảnh</span>
+                            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tính năng 2 -->
+                    <div onclick="switchTab('weather-calendar')" class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-cloud-sun"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-700">Thời Tiết & Lịch Vụ Mùa</h3>
+                            <p class="text-sm text-gray-600 mt-2 leading-relaxed">Theo dõi thời tiết theo từng thứ, ngày trong tuần và lịch công tác xuống giống, bón phân chuẩn khuyến nông.</p>
+                        </div>
+                        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center text-blue-600 font-semibold text-sm">
+                            <span>Xem dự báo & lịch</span>
+                            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tính năng 3 -->
+                    <div onclick="switchTab('market-pest')" class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 hover:border-amber-200 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-sack-dollar"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-amber-700">Giá Nông Sản & Dịch Hại</h3>
+                            <p class="text-sm text-gray-600 mt-2 leading-relaxed">Cập nhật giá lúa tươi, đậu phộng, hồ tiêu, sắn, ném tại địa phương và cảnh báo ổ dịch mới nhất.</p>
+                        </div>
+                        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center text-amber-600 font-semibold text-sm">
+                            <span>Tra cứu thị trường</span>
+                            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tính năng 4 -->
+                    <div onclick="switchTab('community')" class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 hover:border-purple-200 transition-all cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-user-doctor"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-purple-700">Tư Vấn Kỹ Sư AI</h3>
+                            <p class="text-sm text-gray-600 mt-2 leading-relaxed">Đặt câu hỏi trực tuyến về kỹ thuật canh tác hữu cơ, cải tạo đất cát ven biển và nhận giải đáp tức thì từ AI.</p>
+                        </div>
+                        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center text-purple-600 font-semibold text-sm">
+                            <span>Gửi câu hỏi ngay</span>
+                            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vùng chuyên canh -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-gray-900">Vùng Chuyên Canh Nông Nghiệp Bền Vững Thăng Bình</h3>
+                        <p class="text-sm text-gray-600 mt-1">Tối ưu hóa canh tác theo đặc thù thổ nhưỡng vùng cát ven biển, vùng đồng bằng và vùng gò đồi bán sơn địa.</p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 w-fit">
+                        <i class="fa-solid fa-leaf mr-1.5"></i> Hướng tới VietGAP & Hữu cơ
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-gray-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-emerald-700 font-bold">
+                            <i class="fa-solid fa-wheat-awn"></i>
+                            <span>Vùng Lúa Thâm Canh</span>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed">Tập trung tại Bình Nguyên, Bình Quý, Bình Phục, Bình Trị. Áp dụng quy trình "1 phải 5 giảm", quản lý dịch hại tổng hợp IPM bằng AI.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-gray-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-amber-700 font-bold">
+                            <i class="fa-solid fa-seedling"></i>
+                            <span>Vùng Đất Cát Ven Biển</span>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed">Bình Minh, Bình Dương, Bình Hải, Bình Nam. Chuyên canh đậu phộng (lạc), củ ném (hành tăm), măng tây xanh và rau màu tưới tiết kiệm.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-gray-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-teal-700 font-bold">
+                            <i class="fa-solid fa-tree"></i>
+                            <span>Vùng Gò Đồi Bán Sơn Địa</span>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed">Bình Lãnh, Bình Phú, Bình Chánh, Bình Quế. Phát triển cây hồ tiêu, cây ăn quả có múi (bưởi da xanh, cam), keo lai và chăn nuôi an toàn sinh học.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!-- TAB 2: AI CHUẨN ĐOÁN BỆNH CÂY QUA HÌNH ẢNH                 -->
+        <!-- ========================================================== -->
+        <section id="tab-ai-doctor" class="tab-content hidden space-y-8">
+            <div class="bg-gradient-to-r from-emerald-800 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg">
+                <div class="max-w-3xl">
+                    <span class="px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-wider">Công nghệ Thị giác máy tính & Gemini AI</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold mt-3">Bác Sĩ Cây Trồng AI – Nhận Diện Bệnh Qua Ảnh</h2>
+                    <p class="text-emerald-100 text-sm sm:text-base mt-2">
+                        Chụp rõ nét vùng lá, thân, quả hoặc rễ cây có dấu hiệu bất thường. Hệ thống Gemini AI sẽ phân tích hình ảnh thật, xác định tác nhân gây bệnh và đề xuất phác đồ xử lý an toàn.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Cột trái: Tải ảnh & Mẫu bệnh -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 space-y-5">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                <i class="fa-solid fa-cloud-arrow-up text-emerald-600 mr-2"></i>
+                                1. Tải ảnh cây trồng cần kiểm tra
+                            </h3>
+                            <button type="button" onclick="testGeminiConnection()" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all shrink-0">
+                                <i class="fa-solid fa-plug-circle-check mr-1"></i> Kiểm tra AI
+                            </button>
+                        </div>
+
+                        <!-- Chọn nhóm cây -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1.5">Chọn nhóm cây trồng (Tùy chọn)</label>
+                            <select id="crop-type-select" class="w-full rounded-xl border-gray-300 bg-gray-50 border px-3.5 py-2.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                                <option value="auto">Tự động nhận diện cây trồng</option>
+                                <option value="Lúa nước">Cây Lúa nước (Đông Xuân / Hè Thu)</option>
+                                <option value="Đậu phộng (Lạc)">Cây Đậu phộng (Lạc)</option>
+                                <option value="Hồ tiêu">Cây Hồ tiêu</option>
+                                <option value="Cây ăn quả (Bưởi, Cam, Xoài)">Cây ăn quả (Bưởi, Cam, Chuối...)</option>
+                                <option value="Rau màu & Củ ném">Rau màu & Củ ném</option>
+                            </select>
+                        </div>
+
+                        <!-- Vùng tải ảnh / Xem trước -->
+                        <div id="dropzone" onclick="document.getElementById('file-input').click()" class="relative border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-2xl p-6 text-center cursor-pointer transition-all min-h-[260px] flex flex-col items-center justify-center overflow-hidden group">
+                            <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            
+                            <!-- Trạng thái chưa chọn ảnh -->
+                            <div id="upload-placeholder" class="space-y-3">
+                                <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto text-2xl group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800">Nhấn để chọn ảnh hoặc chụp trực tiếp</p>
+                                    <p class="text-xs text-gray-500 mt-1">Hỗ trợ định dạng JPG, PNG, WEBP (Tự động tối ưu tốc độ quét)</p>
+                                </div>
+                            </div>
+
+                            <!-- Ảnh xem trước -->
+                            <img id="image-preview" src="" alt="Ảnh cây trồng" class="hidden max-h-64 w-auto rounded-xl object-contain shadow-md">
+                            
+                            <!-- Hiệu ứng đang quét AI -->
+                            <div id="scan-overlay" class="hidden absolute inset-0 bg-emerald-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center text-white px-4">
+                                <div class="w-full h-1 bg-emerald-400 shadow-[0_0_15px_#34d399] absolute animate-scan"></div>
+                                <i class="fa-solid fa-microchip text-3xl text-emerald-300 animate-pulse mb-2"></i>
+                                <p class="text-sm font-bold tracking-wide">GEMINI AI ĐANG QUÉT BỆNH TRÊN ẢNH...</p>
+                                <p id="scan-status-sub" class="text-xs text-emerald-200 mt-1">Đang gửi dữ liệu tới máy chủ Google AI...</p>
+                            </div>
+                        </div>
+
+                        <!-- Nút bấm -->
+                        <div class="flex gap-3">
+                            <button id="analyze-btn" onclick="runAIDiagnosis()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 px-5 rounded-xl shadow-md shadow-emerald-200 transition-all flex items-center justify-center space-x-2 active:scale-95">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Phân Tích Bệnh Bằng AI</span>
+                            </button>
+                            <button onclick="resetDiagnosis()" class="px-4 py-3.5 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-600 font-semibold text-sm transition-all" title="Làm mới">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Thư viện 8 mẫu bệnh phổ biến -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-bold text-gray-900">
+                                <i class="fa-solid fa-vial text-amber-500 mr-1.5"></i> Tra cứu nhanh phác đồ 8 bệnh phổ biến:
+                            </h4>
+                            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">Cẩm nang</span>
+                        </div>
+                        <div id="sample-buttons-grid" class="grid grid-cols-2 gap-2.5">
+                            <!-- Tạo tự động bằng JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Kết quả chẩn đoán -->
+                <div class="lg:col-span-7">
+                    <!-- Trạng thái trống -->
+                    <div id="result-empty" class="bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-gray-200 h-full flex flex-col items-center justify-center text-center space-y-4 min-h-[450px]">
+                        <div class="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl">
+                            <i class="fa-solid fa-file-medical"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Chưa có dữ liệu chẩn đoán</h3>
+                        <p class="text-sm text-gray-500 max-w-md leading-relaxed">
+                            Vui lòng tải lên hình ảnh lá cây bị bệnh bên cột trái rồi bấm <strong>Phân Tích Bệnh Bằng AI</strong>, hoặc chọn một trong <strong>8 bệnh phổ biến</strong> để xem phác đồ phòng trừ.
+                        </p>
+                        <div class="grid grid-cols-3 gap-3 pt-4 w-full max-w-md text-left">
+                            <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                                <div class="text-emerald-700 font-bold text-xs">Bước 1</div>
+                                <div class="text-[11px] text-gray-600 mt-0.5">Chụp cận cảnh vết bệnh</div>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                                <div class="text-emerald-700 font-bold text-xs">Bước 2</div>
+                                <div class="text-[11px] text-gray-600 mt-0.5">Bấm Phân tích AI</div>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                                <div class="text-emerald-700 font-bold text-xs">Bước 3</div>
+                                <div class="text-[11px] text-gray-600 mt-0.5">Nhận phác đồ điều trị</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thẻ kết quả chẩn đoán -->
+                    <div id="result-card" class="hidden bg-white rounded-3xl shadow-md border border-emerald-200 overflow-hidden space-y-0">
+                        <div class="bg-gradient-to-r from-emerald-700 to-teal-700 p-6 text-white">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span id="res-crop-badge" class="px-3 py-1 bg-white/20 rounded-full text-xs font-bold">Cây Lúa nước</span>
+                                <span id="res-confidence" class="px-3 py-1 bg-amber-400 text-gray-950 rounded-full text-xs font-extrabold">Độ tin cậy AI: 96.4%</span>
+                            </div>
+                            <h3 id="res-disease-name" class="text-2xl sm:text-3xl font-extrabold mt-3">Bệnh Đạo Ôn Lá</h3>
+                            <div class="flex items-center space-x-4 mt-2 text-xs sm:text-sm text-emerald-100">
+                                <span><i class="fa-solid fa-gauge-high mr-1"></i> Mức độ nguy hại: <strong id="res-severity" class="text-amber-300">Cao</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="p-6 sm:p-8 space-y-6">
+                            <!-- Triệu chứng & Nguyên nhân -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-gray-100 space-y-1.5">
+                                    <h4 class="text-xs font-extrabold uppercase text-gray-500 flex items-center">
+                                        <i class="fa-solid fa-eye text-emerald-600 mr-1.5"></i> Triệu chứng nhận diện
+                                    </h4>
+                                    <p id="res-symptoms" class="text-sm text-gray-700 leading-relaxed"></p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-gray-100 space-y-1.5">
+                                    <h4 class="text-xs font-extrabold uppercase text-gray-500 flex items-center">
+                                        <i class="fa-solid fa-virus text-rose-500 mr-1.5"></i> Nguyên nhân & Điều kiện phát sinh
+                                    </h4>
+                                    <p id="res-cause" class="text-sm text-gray-700 leading-relaxed"></p>
+                                </div>
+                            </div>
+
+                            <!-- Biện pháp sinh học -->
+                            <div class="p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-2">
+                                <h4 class="text-sm font-extrabold text-emerald-900 flex items-center">
+                                    <i class="fa-solid fa-leaf text-emerald-600 mr-2 text-lg"></i>
+                                    1. Biện pháp canh tác & Sinh học bền vững (Ưu tiên)
+                                </h4>
+                                <ul id="res-bio-steps" class="text-sm text-emerald-950 space-y-1.5 list-disc list-inside leading-relaxed"></ul>
+                            </div>
+
+                            <!-- Biện pháp hóa học -->
+                            <div class="p-5 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-2">
+                                <h4 class="text-sm font-extrabold text-amber-900 flex items-center">
+                                    <i class="fa-solid fa-flask-vial text-amber-600 mr-2 text-lg"></i>
+                                    2. Biện pháp hóa học đặc trị (Áp dụng nguyên tắc "4 Đúng")
+                                </h4>
+                                <p id="res-chem-steps" class="text-sm text-amber-950 leading-relaxed"></p>
+                            </div>
+
+                            <!-- Ghi chú chuyên sâu từ Gemini AI -->
+                            <div id="res-gemini-extra" class="hidden p-5 rounded-2xl bg-blue-50 border border-blue-200 space-y-2">
+                                <h4 class="text-sm font-extrabold text-blue-900 flex items-center">
+                                    <i class="fa-solid fa-robot text-blue-600 mr-2"></i> Phân tích chuyên sâu từ Trợ lý Gemini AI
+                                </h4>
+                                <div id="res-gemini-text" class="text-sm text-blue-950 whitespace-pre-line leading-relaxed"></div>
+                            </div>
+
+                            <!-- Chân thẻ kết quả -->
+                            <div class="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+                                <span class="text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i> Khuyến cáo theo quy chuẩn Trạm Khuyến Nông</span>
+                                <button onclick="copyDiagnosisReport()" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-all flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-copy"></i>
+                                    <span>Sao chép phác đồ điều trị</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!-- TAB 3: THỜI TIẾT NÔNG VỤ & LỊCH CÔNG TÁC                   -->
+        <!-- ========================================================== -->
+        <section id="tab-weather-calendar" class="tab-content hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Thẻ Thời tiết (5 cột) -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg space-y-6 relative overflow-hidden">
+                        <div class="flex items-start justify-between relative z-10 gap-2">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Khí tượng nông nghiệp</span>
+                                <h3 class="text-2xl font-extrabold mt-0.5">Thăng Bình, Đà Nẵng</h3>
+                                <p id="weather-today-full-date" class="text-xs sm:text-sm font-semibold text-amber-300 mt-1 flex items-center">
+                                    <i class="fa-regular fa-calendar mr-1.5"></i> Đang tải thứ, ngày...
+                                </p>
+                                <p id="weather-live-clock" class="text-xs font-mono text-blue-100 mt-1 flex items-center">
+                                    <i class="fa-regular fa-clock mr-1.5 text-amber-300"></i> Đang đồng bộ giờ thực tế...
+                                </p>
+                            </div>
+                            <button onclick="fetchLiveWeather(true)" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md transition-all flex items-center space-x-1.5 shrink-0" title="Làm mới dữ liệu thời tiết">
+                                <i id="weather-refresh-icon" class="fa-solid fa-rotate-right"></i>
+                                <span id="weather-badge-time">Cập nhật</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between relative z-10">
+                            <div>
+                                <div id="weather-temp" class="text-5xl sm:text-6xl font-black">29°C</div>
+                                <p id="weather-condition-text" class="text-blue-100 text-sm mt-1">Có mây, nắng nhẹ</p>
+                            </div>
+                            <div class="text-right space-y-1.5 text-xs sm:text-sm text-blue-100">
+                                <div><i class="fa-solid fa-droplet w-5 text-cyan-300"></i> Độ ẩm: <strong id="weather-humidity" class="text-white">82%</strong></div>
+                                <div><i class="fa-solid fa-wind w-5 text-cyan-300"></i> Gió: <strong id="weather-wind" class="text-white">12 km/h</strong></div>
+                                <div><i class="fa-solid fa-cloud-rain w-5 text-cyan-300"></i> Xác suất mưa: <strong id="weather-rain" class="text-white">15%</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Khuyến cáo canh tác theo thời tiết -->
+                        <div class="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 space-y-1.5 relative z-10">
+                            <div class="text-xs font-bold text-amber-300 uppercase flex items-center">
+                                <i class="fa-solid fa-bullhorn mr-1.5"></i> Khuyến cáo canh tác tự động
+                            </div>
+                            <p id="weather-advice" class="text-xs sm:text-sm text-white leading-relaxed">
+                                Độ ẩm sáng sớm cao (82%) thuận lợi cho nấm đạo ôn lá lúa và sương mai phát triển. Bà con nên thăm đồng kiểm tra và hạn chế bón thừa đạm.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Dự báo 5 ngày tới (Hiển thị đầy đủ Thứ, Ngày/Tháng) -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-base font-bold text-gray-900 flex items-center">
+                                <i class="fa-solid fa-calendar-week text-blue-600 mr-2"></i> Dự báo thời tiết 5 ngày tới
+                            </h4>
+                            <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">Thứ & Ngày</span>
+                        </div>
+                        <div id="weather-forecast-list" class="space-y-2.5">
+                            <!-- Tự động điền đủ Thứ + Ngày/Tháng bằng JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lịch Công Tác & Quản lý công việc (7 cột) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 space-y-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <span class="text-xs font-bold uppercase text-emerald-600 tracking-wider">Khuyến nông địa phương</span>
+                                <h3 class="text-2xl font-extrabold text-gray-900 mt-0.5">Lịch Công Tác & Thời Vụ</h3>
+                            </div>
+                            <button onclick="openAddTaskModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 w-fit">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Thêm ghi chú công việc</span>
+                            </button>
+                        </div>
+
+                        <!-- Bộ lọc nhóm cây -->
+                        <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+                            <button onclick="filterTasks('all', this)" class="task-filter active px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white">Tất cả công việc</button>
+                            <button onclick="filterTasks('lua', this)" class="task-filter px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Cây Lúa</button>
+                            <button onclick="filterTasks('hoamau', this)" class="task-filter px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Đậu phộng & Hoa màu</button>
+                            <button onclick="filterTasks('cayanqua', this)" class="task-filter px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Hồ tiêu & Cây ăn quả</button>
+                        </div>
+
+                        <!-- Danh sách công việc -->
+                        <div id="task-list" class="space-y-3.5">
+                            <div class="task-item p-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 flex items-start justify-between gap-4" data-category="lua">
+                                <div class="flex items-start space-x-3.5">
+                                    <input type="checkbox" checked onchange="toggleTaskComplete(this)" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                    <div>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Giai đoạn Đẻ nhánh - Làm đòng</span>
+                                        <h4 class="text-sm font-bold text-gray-900 mt-1 line-through opacity-60">Bón thúc đợt 2 & điều tiết nước nông lộ phơi trên ruộng lúa</h4>
+                                        <p class="text-xs text-gray-600 mt-1">Áp dụng cho giống lúa BC15, Thiên Ưu 8, Hà Phát 3. Giữ mực nước 3-5cm giúp rễ ăn sâu, hạn chế đổ ngã.</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-emerald-700 whitespace-nowrap">Tuần này</span>
+                            </div>
+
+                            <div class="task-item p-4 rounded-2xl border border-gray-200 bg-white flex items-start justify-between gap-4" data-category="hoamau">
+                                <div class="flex items-start space-x-3.5">
+                                    <input type="checkbox" onchange="toggleTaskComplete(this)" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                    <div>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Vùng đất cát ven biển</span>
+                                        <h4 class="text-sm font-bold text-gray-900 mt-1">Xới xáo phá váng, vun gốc và bón vôi bột cho cây Đậu phộng (Lạc)</h4>
+                                        <p class="text-xs text-gray-600 mt-1">Bổ sung Canxi giúp chắc hạt, phòng ngừa bệnh héo xanh vi khuẩn và thối gốc mốc đen.</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-amber-600 whitespace-nowrap">Sắp tới</span>
+                            </div>
+
+                            <div class="task-item p-4 rounded-2xl border border-gray-200 bg-white flex items-start justify-between gap-4" data-category="cayanqua">
+                                <div class="flex items-start space-x-3.5">
+                                    <input type="checkbox" onchange="toggleTaskComplete(this)" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                    <div>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800">Vùng gò đồi</span>
+                                        <h4 class="text-sm font-bold text-gray-900 mt-1">Tỉa cành tạo tán & ủ phân hữu cơ vi sinh Trichoderma cho Hồ tiêu</h4>
+                                        <p class="text-xs text-gray-600 mt-1">Tăng cường hệ vi sinh vật có ích quanh vùng rễ, ngăn ngừa tuyến trùng và nấm Phytophthora gây chết nhanh.</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-teal-600 whitespace-nowrap">Định kỳ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!-- TAB 4: GIÁ NÔNG SẢN & CẢNH BÁO DỊCH HẠI                    -->
+        <!-- ========================================================== -->
+        <section id="tab-market-pest" class="tab-content hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Bảng giá nông sản (7 cột) -->
+                <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Thị trường nông sản</span>
+                            <h3 class="text-2xl font-extrabold text-gray-900 mt-0.5">Bảng Giá Nông Sản Hôm Nay</h3>
+                        </div>
+                        <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full font-medium">Đơn vị: VNĐ/kg</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
+                                    <th class="py-3 px-2">Mặt hàng nông sản</th>
+                                    <th class="py-3 px-2">Phân loại</th>
+                                    <th class="py-3 px-2 text-right">Giá thu mua</th>
+                                    <th class="py-3 px-2 text-right">Biến động</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm">
+                                <tr class="hover:bg-slate-50">
+                                    <td class="py-3.5 px-2 font-bold text-gray-900">Lúa tươi tại ruộng</td>
+                                    <td class="py-3.5 px-2 text-xs text-gray-500">BC15, Thiên Ưu 8</td>
+                                    <td class="py-3.5 px-2 text-right font-extrabold text-emerald-700">7.600 đ</td>
+                                    <td class="py-3.5 px-2 text-right text-xs font-bold text-emerald-600"><i class="fa-solid fa-caret-up mr-1"></i>+200đ</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="py-3.5 px-2 font-bold text-gray-900">Đậu phộng (Lạc) khô</td>
+                                    <td class="py-3.5 px-2 text-xs text-gray-500">Lạc vỏ vùng cát</td>
+                                    <td class="py-3.5 px-2 text-right font-extrabold text-emerald-700">34.500 đ</td>
+                                    <td class="py-3.5 px-2 text-right text-xs font-bold text-emerald-600"><i class="fa-solid fa-caret-up mr-1"></i>+500đ</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="py-3.5 px-2 font-bold text-gray-900">Hồ tiêu đen khô</td>
+                                    <td class="py-3.5 px-2 text-xs text-gray-500">Tiêu sạch đạt chuẩn</td>
+                                    <td class="py-3.5 px-2 text-right font-extrabold text-emerald-700">146.000 đ</td>
+                                    <td class="py-3.5 px-2 text-right text-xs font-bold text-emerald-600"><i class="fa-solid fa-caret-up mr-1"></i>+1.500đ</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="py-3.5 px-2 font-bold text-gray-900">Củ ném (Hành tăm)</td>
+                                    <td class="py-3.5 px-2 text-xs text-gray-500">Đặc sản đất cát</td>
+                                    <td class="py-3.5 px-2 text-right font-extrabold text-emerald-700">58.000 đ</td>
+                                    <td class="py-3.5 px-2 text-right text-xs font-bold text-gray-500"><i class="fa-solid fa-minus mr-1"></i>Ổn định</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="py-3.5 px-2 font-bold text-gray-900">Sắn (Khoai mì) tươi</td>
+                                    <td class="py-3.5 px-2 text-xs text-gray-500">Chữ bột 30%</td>
+                                    <td class="py-3.5 px-2 text-right font-extrabold text-emerald-700">2.450 đ</td>
+                                    <td class="py-3.5 px-2 text-right text-xs font-bold text-rose-500"><i class="fa-solid fa-caret-down mr-1"></i>-50đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cảnh báo dịch hại (5 cột) -->
+                <div class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 space-y-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase text-rose-600 tracking-wider">Trạm Bảo Vệ Thực Vật</span>
+                        <h3 class="text-xl font-extrabold text-gray-900 mt-0.5">Cảnh Báo Dịch Hại Trọng Điểm</h3>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-rose-800 uppercase">Mức độ cao • Cây Lúa</span>
+                                <span class="px-2 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full">Báo động</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-900">Bệnh Đạo Ôn Lá & Rầy Nâu</h4>
+                            <p class="text-xs text-gray-700 leading-relaxed">Thời tiết âm u xen kẽ nắng ấm tạo điều kiện nấm đạo ôn phát sinh nhanh trên ruộng sạ dày, bón thừa đạm.</p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-amber-800 uppercase">Mức độ trung bình • Đậu phộng</span>
+                                <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">Theo dõi</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-900">Sâu Khoang & Bệnh Đốm Lá</h4>
+                            <p class="text-xs text-gray-700 leading-relaxed">Kiểm tra mặt dưới lá đậu phộng vào sáng sớm để phát hiện ổ trứng sâu khoang, ưu tiên dùng chế phẩm sinh học Bt.</p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-emerald-800 uppercase">An toàn • Hồ tiêu</span>
+                                <span class="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full">Ổn định</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-900">Rệp Sáp & Tuyến Trùng Rễ</h4>
+                            <p class="text-xs text-gray-700 leading-relaxed">Duy trì độ ẩm gốc hợp lý và bổ sung nấm đối kháng Trichoderma định kỳ đầu mùa mưa.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!-- TAB 5: HỎI ĐÁP CÙNG KỸ SƯ NÔNG NGHIỆP AI                   -->
+        <!-- ========================================================== -->
+        <section id="tab-community" class="tab-content hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Biểu mẫu đặt câu hỏi (5 cột) -->
+                <div class="lg:col-span-5">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 space-y-5 sticky top-24">
+                        <div>
+                            <span class="text-xs font-bold uppercase text-purple-600 tracking-wider">Tư vấn trực tuyến 24/7</span>
+                            <h3 class="text-2xl font-extrabold text-gray-900 mt-0.5">Đặt Câu Hỏi Cho Kỹ Sư AI</h3>
+                            <p class="text-xs text-gray-500 mt-1">Gửi thắc mắc về sâu bệnh, phân bón, kỹ thuật canh tác để được Kỹ sư AI giải đáp ngay lập tức.</p>
+                        </div>
+
+                        <form onsubmit="handlePostQuestion(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Họ tên bà con / Địa chỉ</label>
+                                <input type="text" id="q-author" required placeholder="Ví dụ: Nguyễn Văn Ba - Bình Nguyên" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Chủ đề cây trồng / Vấn đề</label>
+                                <select id="q-category" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm bg-white focus:ring-2 focus:ring-purple-500 outline-none">
+                                    <option value="Kỹ thuật trồng Lúa">Kỹ thuật trồng Lúa</option>
+                                    <option value="Đậu phộng & Hoa màu đất cát">Đậu phộng & Hoa màu đất cát</option>
+                                    <option value="Hồ tiêu & Cây ăn quả">Hồ tiêu & Cây ăn quả</option>
+                                    <option value="Phân bón & Cải tạo đất">Phân bón & Cải tạo đất</option>
+                                    <option value="Phòng trừ sâu bệnh sinh học">Phòng trừ sâu bệnh sinh học</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nội dung câu hỏi chi tiết</label>
+                                <textarea id="q-content" rows="4" required placeholder="Mô tả tình trạng cây trồng của bà con (ví dụ: lá lúa bị vàng chóp, rễ đen thì xử lý thế nào?)..." class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-5 rounded-xl shadow-md shadow-purple-200 transition-all flex items-center justify-center space-x-2 active:scale-95">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Gửi Câu Hỏi & Nhận Tư Vấn AI</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Danh sách câu hỏi & giải đáp (7 cột) -->
+                <div class="lg:col-span-7 space-y-5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-extrabold text-gray-900">Thảo Luận & Giải Đáp Mới Nhất</h3>
+                        <span class="text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1 rounded-full">Trợ lý AI trực tuyến</span>
+                    </div>
+
+                    <div id="community-feed" class="space-y-4">
+                        <!-- Câu hỏi mẫu 1 -->
+                        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold">H</div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900">Trần Văn Hùng - Bình Quý</h4>
+                                        <p class="text-[11px] text-gray-500">Nông dân • Kỹ thuật trồng Lúa • 2 giờ trước</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Kỹ sư AI đã giải đáp
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-700 leading-relaxed">
+                                Ruộng lúa nhà tôi giai đoạn đẻ nhánh rộ thấy xuất hiện các vết chấm nhỏ màu nâu hình thoi trên lá, trời sáng sớm hay có sương mù. Xin hỏi kỹ sư cách xử lý an toàn mà không làm cháy lá?
+                            </p>
+                            <div class="bg-purple-50/60 rounded-2xl p-4 border border-purple-100 space-y-2">
+                                <div class="flex items-center space-x-2 text-xs font-bold text-purple-700">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                    <span>Kỹ sư Nông nghiệp AI phản hồi trực tuyến:</span>
+                                </div>
+                                <p class="text-xs text-gray-700 leading-relaxed">
+                                    Chào bác Hùng, đây là dấu hiệu đặc trưng của bệnh đạo ôn lá giai đoạn sớm. Bác cần ngưng bón phân đạm (Urê) và không phun phân bón lá ngay lúc này. Giữ mực nước ruộng ổn định 3-5cm và phun thuốc đặc trị chứa hoạt chất Tricyclazole hoặc Isoprothiolane vào sáng sớm khi ráo sương.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Câu hỏi mẫu 2 -->
+                        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center font-bold">M</div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900">Lê Thị Mai - Bình Minh</h4>
+                                        <p class="text-[11px] text-gray-500">Nông dân • Đậu phộng & Hoa màu đất cát • Hôm qua</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Kỹ sư AI đã giải đáp
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-700 leading-relaxed">
+                                Đất cát ven biển trồng đậu phộng vụ trước hay bị héo xanh chết rũ lúc ra hoa. Vụ này tôi nên bón lót gì để cải tạo đất bền vững?
+                            </p>
+                            <div class="bg-purple-50/60 rounded-2xl p-4 border border-purple-100 space-y-2">
+                                <div class="flex items-center space-x-2 text-xs font-bold text-purple-700">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                    <span>Kỹ sư Nông nghiệp AI phản hồi trực tuyến:</span>
+                                </div>
+                                <p class="text-xs text-gray-700 leading-relaxed">
+                                    Chào chị Mai, để phòng bệnh héo xanh vi khuẩn trên đất cát, chị nên cày phơi ải đất trước khi gieo, bón lót vôi bột (30-40kg/sào) kết hợp phân chuồng hoai mục ủ nấm đối kháng Trichoderma. Nên luân canh 1 vụ lúa nước hoặc bắp để cắt đứt nguồn bệnh trong đất.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= MODAL THÊM CÔNG VIỆC ================= -->
+    <div id="task-modal" class="hidden fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-extrabold text-gray-900">Thêm Công Việc Canh Tác Mới</h3>
+                <button onclick="closeAddTaskModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="handleAddTask(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tên công việc</label>
+                    <input type="text" id="new-task-title" required placeholder="Ví dụ: Phun chế phẩm sinh học phòng rầy" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nhóm cây trồng</label>
+                    <select id="new-task-cat" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="lua">Cây Lúa</option>
+                        <option value="hoamau">Đậu phộng & Hoa màu</option>
+                        <option value="cayanqua">Hồ tiêu & Cây ăn quả</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Ghi chú kỹ thuật</label>
+                    <textarea id="new-task-desc" rows="2" placeholder="Liều lượng phân bón, thuốc BVTV hoặc lưu ý..." class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeAddTaskModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100">Hủy bỏ</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white">Lưu vào lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= CHÂN TRANG (FOOTER) ================= -->
+    <footer class="bg-emerald-950 text-emerald-100 pt-14 pb-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-10 pb-10">
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
+                        <i class="fa-solid fa-seedling text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-extrabold text-white">AgriAI</span>
+                </div>
+                <p class="text-sm text-emerald-200/80 leading-relaxed">
+                    Bạn đồng hành cùng nhà nông trên hành trình phát triển nông nghiệp bền vững. Ứng dụng công nghệ AI chẩn đoán bệnh cây trồng và kết nối tri thức khuyến nông.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-base font-bold text-white uppercase tracking-wider">Cây trồng chủ lực</h3>
+                <ul class="space-y-2.5 text-sm text-emerald-200/80">
+                    <li><span>Lúa nước (Đông Xuân & Hè Thu)</span></li>
+                    <li><span>Cây hồ tiêu & Cây công nghiệp</span></li>
+                    <li><span>Đậu phộng (Lạc) đất cát ven sông</span></li>
+                    <li><span>Củ ném (Hành tăm) đặc sản</span></li>
+                    <li><span>Cây ăn quả & Rau màu VietGAP</span></li>
+                </ul>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-base font-bold text-white uppercase tracking-wider">Liên hệ hỗ trợ</h3>
+                <ul class="space-y-3 text-sm text-emerald-200/80">
+                    <li class="flex items-start space-x-3">
+                        <i class="fa-solid fa-location-dot text-emerald-400 mt-1"></i>
+                        <span>Trung tâm Kỹ thuật Nông nghiệp Thăng Bình, TP Đà Nẵng</span>
+                    </li>
+                    <li class="flex items-center space-x-3">
+                        <i class="fa-solid fa-phone-volume text-emerald-400"></i>
+                        <span>Trạm Khuyến Nông TP Đà Nẵng: 02363846264<br>Hotline: 0777571072 - 0934919635</span>
+                    </li>
+                    <li class="flex items-center space-x-3">
+                        <i class="fa-solid fa-envelope text-emerald-400"></i>
+                        <span>Email: huynhngoctuan212@gmail.com</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-emerald-900/60 text-center text-xs text-emerald-400/80">
+            <p>&copy; 2026 AgriAI. Nền tảng phát triển nông nghiệp thông minh bền vững. Bảo lưu mọi quyền.</p>
+        </div>
+    </footer>
+
+    <!-- ================= MÃ JAVASCRIPT HOẠT ĐỘNG ================= -->
+    <script>
+        // =========================================================================
+        // CẤU HÌNH MÃ API KEY (ĐÃ TÍCH HỢP SẴN TRONG MÃ NGUỒN)
+        const GEMINI_API_KEY = "AQ.Ab8RN6KoXbzOMjVKwKjKbDeNa2_h31xR-mNEJVtYDW6yO4J_CQ";
+        // =========================================================================
+
+        function getActiveApiKey() {
+            return (GEMINI_API_KEY || '').trim();
+        }
+
+        // --- 1. HỆ THỐNG THÔNG BÁO (TOAST) ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-emerald-600 text-white';
+            let icon = 'fa-circle-check';
+            if (type === 'warning') { bgClass = 'bg-amber-500 text-gray-950'; icon = 'fa-triangle-exclamation'; }
+            if (type === 'error') { bgClass = 'bg-rose-600 text-white'; icon = 'fa-circle-xmark'; }
+            if (type === 'info') { bgClass = 'bg-blue-600 text-white'; icon = 'fa-circle-info'; }
+
+            toast.className = `${bgClass} px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-3 text-xs sm:text-sm font-semibold pointer-events-auto transform transition-all duration-300 translate-x-full opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base shrink-0"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- 2. ĐIỀU HƯỚNG TAB ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
+                btn.classList.add('text-gray-600');
+            });
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+                activeBtn.classList.remove('text-gray-600');
+            }
+            if (tabId === 'weather-calendar') {
+                fetchLiveWeather(false);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- 3. CƠ SỞ DỮ LIỆU 8 MẪU BỆNH & BỘ QUÉT GEMINI AI ---
+        const DISEASE_DATABASE = [
+            {
+                id: 'lua-dao-on',
+                shortName: 'Đạo ôn lá lúa',
+                crop: 'Cây Lúa nước',
+                name: 'Bệnh Đạo Ôn Lá (Pyricularia oryzae)',
+                confidence: '97.4%',
+                severity: 'Cao (Lây lan cực nhanh khi ẩm độ cao)',
+                symptoms: 'Trên lá xuất hiện các vết chấm nhỏ màu xanh xám, sau lớn dần thành hình thoi đặc trưng (nhọn hai đầu), tâm màu xám tro, viền nâu đỏ.',
+                cause: 'Do nấm Pyricularia oryzae phát triển mạnh trong điều kiện thời tiết âm u, sương mù nhiều, ruộng sạ dày và bón thừa phân đạm.',
+                bioSteps: [
+                    'Ngưng bón phân đạm (Urê) và không phun phân bón lá ngay khi phát hiện vết bệnh.',
+                    'Giữ mực nước ruộng ổn định 3-5cm, không để ruộng khô hạn.',
+                    'Vệ sinh cỏ dại bờ ruộng để giảm nơi cư trú của bào tử nấm.'
+                ],
+                chemSteps: 'Phun thuốc đặc trị chứa hoạt chất Tricyclazole (Beam 75WP), Isoprothiolane (Fuji-One 40EC) hoặc Fenoxanil vào sáng sớm khi ráo sương hoặc chiều mát.'
+            },
+            {
+                id: 'lua-bac-la',
+                shortName: 'Bạc lá vi khuẩn',
+                crop: 'Cây Lúa nước',
+                name: 'Bệnh Cháy Bìa Lá / Bạc Lá Vi Khuẩn (Xanthomonas oryzae)',
+                confidence: '95.8%',
+                severity: 'Trung bình - Cao',
+                symptoms: 'Mép lá hoặc chóp lá lúa chuyển màu vàng cam rồi khô trắng, vết bệnh lan dọc theo gân lá với đường ranh giới gợn sóng rõ rệt.',
+                cause: 'Do vi khuẩn Xanthomonas oryzae xâm nhập qua vết thương cơ giới trên lá sau các đợt mưa giông, gió lớn.',
+                bioSteps: [
+                    'Tháo cạn nước ruộng tạm thời 3-4 ngày để hạn chế vi khuẩn lây lan theo dòng nước.',
+                    'Bón bổ sung Kali và Silic giúp cứng cây, dày vách tế bào lá.',
+                    'Tuyệt đối không phun các chất kích thích sinh trưởng.'
+                ],
+                chemSteps: 'Sử dụng thuốc gốc đồng hoặc hoạt chất Bismerthiazol, Kasugamycin, Oxolinic acid phun ướt đều tán lá.'
+            },
+            {
+                id: 'lua-kho-van',
+                shortName: 'Khô vằn hại lúa',
+                crop: 'Cây Lúa nước',
+                name: 'Bệnh Khô Vằn / Đốm Vằn (Rhizoctonia solani)',
+                confidence: '96.2%',
+                severity: 'Trung bình',
+                symptoms: 'Bẹ lá sát mặt nước xuất hiện vết đốm loang lổ dạng vằn da hổ màu xám xanh, viền nâu, sau lan dần lên lá đòng làm lép hạt.',
+                cause: 'Nấm Rhizoctonia solani tồn tại trong đất và tàn dư rơm rạ, bùng phát khi ruộng rậm rạp, nóng ẩm.',
+                bioSteps: [
+                    'Áp dụng kỹ thuật tưới ướt khô xen kẽ để thông thoáng gốc lúa.',
+                    'Tỉa bớt lá già, lá ủ dưới gốc ở các ruộng sạ quá dày.',
+                    'Sử dụng chế phẩm nấm đối kháng Trichoderma xử lý rơm rạ đầu vụ.'
+                ],
+                chemSteps: 'Phun thuốc chứa hoạt chất Validamycin (Validacin 5SL) hoặc Hexaconazole (Anvil 5SC) hướng vòi phun vào phần thân bẹ lúa.'
+            },
+            {
+                id: 'lac-dom-nau',
+                shortName: 'Đốm nâu đậu phộng',
+                crop: 'Cây Đậu phộng (Lạc)',
+                name: 'Bệnh Đốm Nâu & Đốm Đen Lá Đậu Phộng',
+                confidence: '96.9%',
+                severity: 'Trung bình - Cao',
+                symptoms: 'Mặt trên lá xuất hiện nhiều đốm tròn màu nâu sẫm có quầng vàng xung quanh, làm lá rụng sớm, giảm khả năng vào chắc của củ.',
+                cause: 'Do nấm Cercospora arachidicola phát sinh mạnh trên vùng đất cát trồng lạc liên tục nhiều vụ.',
+                bioSteps: [
+                    'Thu gom và tiêu hủy lá bệnh rụng dưới gốc để giảm nguồn bào tử lây nhiễm.',
+                    'Bón bổ sung vôi bột và phân Kali giúp tăng sức đề kháng cho bộ lá.',
+                    'Luân canh với cây bắp hoặc lúa nước ở vụ tiếp theo.'
+                ],
+                chemSteps: 'Phun phòng trị bằng Mancozeb, Chlorothalonil hoặc Difenoconazole khi tỷ lệ bệnh chớm xuất hiện trên 10% số lá.'
+            },
+            {
+                id: 'lac-heo-xanh',
+                shortName: 'Héo xanh đậu phộng',
+                crop: 'Cây Đậu phộng (Lạc)',
+                name: 'Bệnh Héo Xanh Vi Khuẩn (Ralstonia solanacearum)',
+                confidence: '95.1%',
+                severity: 'Rất Cao (Gây chết cây hàng loạt)',
+                symptoms: 'Lá cây đột ngột héo rũ vào ban ngày nhưng vẫn giữ màu xanh, cắt ngang gốc thấy mạch dẫn hóa nâu và có dịch nhầy trắng đục.',
+                cause: 'Vi khuẩn Ralstonia solanacearum sống trong đất cát ẩm, xâm nhập qua vết thương bộ rễ.',
+                bioSteps: [
+                    'Nhổ bỏ ngay cây bị bệnh đem tiêu hủy xa ruộng, rắc vôi bột khử trùng hốc trồng.',
+                    'Lên luống cao, tạo rãnh thoát nước tốt, không để úng cục bộ sau mưa.',
+                    'Bón phân hữu cơ hoai mục ủ nấm đối kháng Trichoderma trước khi xuống giống.'
+                ],
+                chemSteps: 'Tưới gốc phòng ngừa cho các cây xung quanh bằng thuốc gốc đồng hoặc Kasugamycin theo liều khuyến cáo.'
+            },
+            {
+                id: 'tieu-chet-nhanh',
+                shortName: 'Chết nhanh hồ tiêu',
+                crop: 'Cây Hồ tiêu',
+                name: 'Bệnh Chết Nhanh Hồ Tiêu (Phytophthora capsici)',
+                confidence: '97.1%',
+                severity: 'Rất Cao',
+                symptoms: 'Lá tiêu héo rũ nhanh chóng trong vài ngày rồi rụng hàng loạt khi lá vẫn còn xanh; cổ rễ và thân sát mặt đất bị thối đen.',
+                cause: 'Do nấm Phytophthora capsici tấn công mạnh khi vườn tiêu thoát nước kém trong mùa mưa.',
+                bioSteps: [
+                    'Đào rãnh thoát nước sâu quanh vườn, không để nước đọng quanh bồn gốc tiêu.',
+                    'Cắt tỉa cành lươn sát mặt đất (cách đất 30-40cm) để vườn thông thoáng.',
+                    'Bón phân hữu cơ vi sinh chứa nấm đối kháng Trichoderma 2 lần/năm.'
+                ],
+                chemSteps: 'Quét thuốc gốc đồng hoặc tưới gốc bằng hoạt chất Metalaxyl + Mancozeb (Ridomil Gold) hoặc Fosetyl-Aluminium.'
+            },
+            {
+                id: 'cam-vang-la',
+                shortName: 'Vàng lá thối rễ cam bưởi',
+                crop: 'Cây ăn quả (Bưởi, Cam, Xoài)',
+                name: 'Bệnh Vàng Lá Thối Rễ Cây Có Múi (Fusarium & Phytophthora)',
+                confidence: '94.8%',
+                severity: 'Cao',
+                symptoms: 'Gân lá chuyển màu vàng nhạt, lá rụng dần từ ngọn xuống; đào kiểm tra bộ rễ thấy rễ tơ bị thối đen, tuột vỏ rễ.',
+                cause: 'Do nấm Fusarium và Phytophthora kết hợp tuyến trùng gây hại khi đất bí chặt, ngập úng.',
+                bioSteps: [
+                    'Xới nhẹ lớp đất mặt quanh tán cây, bón vôi nâng độ pH đất lên mức 6.0 - 6.5.',
+                    'Tưới chế phẩm sinh học chứa Trichoderma và humic để kích thích tái tạo rễ tơ mới.',
+                    'Tỉa bỏ cành khô, cành vượt để giảm thoát hơi nước.'
+                ],
+                chemSteps: 'Xử lý tuyến trùng và nấm rễ bằng hoạt chất Metalaxyl hoặc Carbendazim kết hợp phân bón vi lượng qua lá.'
+            },
+            {
+                id: 'rau-suong-mai',
+                shortName: 'Sương mai rau màu',
+                crop: 'Rau màu & Củ ném',
+                name: 'Bệnh Sương Mai / Mốc Sương (Peronospora spp.)',
+                confidence: '96.0%',
+                severity: 'Trung bình - Cao',
+                symptoms: 'Mặt trên lá xuất hiện đốm vàng nhạt góc cạnh, mặt dưới tương ứng có lớp nấm mốc trắng xám như sương muối vào sáng sớm.',
+                cause: 'Nấm giả Peronospora phát triển mạnh khi đêm lạnh, sương nhiều và tưới nước vào chiều tối.',
+                bioSteps: [
+                    'Chỉ tưới nước vào buổi sáng sớm, tránh tưới phun mưa vào chiều tối làm ướt lá qua đêm.',
+                    'Tỉa bỏ lá già sát mặt đất giúp luống rau thông thoáng.',
+                    'Bón cân đối N-P-K, tăng cường Kali và Canxi.'
+                ],
+                chemSteps: 'Phun thuốc sinh học hoặc hoạt chất Dimethomorph, Cymoxanil, Mancozeb (đảm bảo thời gian cách ly an toàn trước thu hoạch).'
+            }
+        ];
+
+        let selectedFileBase64 = null;
+        let currentDiagnosisReport = '';
+
+        function renderSampleButtons() {
+            const container = document.getElementById('sample-buttons-grid');
+            if (!container) return;
+            container.innerHTML = DISEASE_DATABASE.map((item, idx) => `
+                <button onclick="selectSampleDisease(${idx})" class="text-left p-2.5 rounded-xl border border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/70 transition-all flex items-center space-x-2 group">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">${idx + 1}</span>
+                    <span class="text-xs font-semibold text-gray-700 group-hover:text-emerald-900 truncate">${item.shortName}</span>
+                </button>
+            `).join('');
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 360; // Tối ưu kích thước siêu nhẹ để gửi lên AI chỉ trong 1 giây
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    selectedFileBase64 = canvas.toDataURL('image/jpeg', 0.65);
+
+                    const preview = document.getElementById('image-preview');
+                    const placeholder = document.getElementById('upload-placeholder');
+                    preview.src = selectedFileBase64;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    showToast('Đã tải ảnh lên! Nhấn "Phân Tích Bệnh Bằng AI" để quét.', 'info');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function selectSampleDisease(index) {
+            const sample = DISEASE_DATABASE[index];
+            if (!sample) return;
+            selectedFileBase64 = null;
+            const preview = document.getElementById('image-preview');
+            const placeholder = document.getElementById('upload-placeholder');
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            displayDiagnosisResult(sample);
+            showToast(`Đang hiển thị phác đồ chuẩn: ${sample.shortName}`, 'success');
+        }
+
+        function resetDiagnosis() {
+            selectedFileBase64 = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('image-preview').src = '';
+            document.getElementById('image-preview').classList.add('hidden');
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            document.getElementById('result-card').classList.add('hidden');
+            document.getElementById('result-empty').classList.remove('hidden');
+            showToast('Đã làm mới khu vực chẩn đoán.', 'info');
+        }
+
+        function displayDiagnosisResult(data, geminiExtraText = '') {
+            document.getElementById('result-empty').classList.add('hidden');
+            document.getElementById('result-card').classList.remove('hidden');
+
+            document.getElementById('res-crop-badge').textContent = data.crop || 'Cây trồng';
+            document.getElementById('res-confidence').textContent = `Độ tin cậy AI: ${data.confidence || '95%'}`;
+            document.getElementById('res-disease-name').textContent = data.name || 'Chưa xác định rõ';
+            document.getElementById('res-severity').textContent = data.severity || 'Cần theo dõi';
+            document.getElementById('res-symptoms').textContent = data.symptoms || 'Đang cập nhật mô tả triệu chứng.';
+            document.getElementById('res-cause').textContent = data.cause || 'Đang cập nhật nguyên nhân.';
+
+            const bioList = document.getElementById('res-bio-steps');
+            const steps = Array.isArray(data.bioSteps) && data.bioSteps.length > 0
+                ? data.bioSteps
+                : ['Vệ sinh đồng ruộng, tỉa bỏ lá bệnh nặng và giữ thông thoáng vườn cây.'];
+            bioList.innerHTML = steps.map(step => `<li>${step}</li>`).join('');
+            document.getElementById('res-chem-steps').textContent = data.chemSteps || 'Tham khảo cán bộ khuyến nông địa phương để chọn thuốc đặc trị phù hợp.';
+
+            const extraBox = document.getElementById('res-gemini-extra');
+            const extraText = document.getElementById('res-gemini-text');
+            if (geminiExtraText && geminiExtraText.trim()) {
+                extraText.textContent = geminiExtraText.trim();
+                extraBox.classList.remove('hidden');
+            } else {
+                extraText.textContent = '';
+                extraBox.classList.add('hidden');
+            }
+
+            currentDiagnosisReport = `BÁO CÁO CHẨN ĐOÁN AGRIAI\n- Cây trồng: ${data.crop}\n- Chẩn đoán: ${data.name} (${data.confidence})\n- Mức độ: ${data.severity}\n- Triệu chứng: ${data.symptoms}\n- Nguyên nhân: ${data.cause}\n- Biện pháp sinh học:\n  + ${steps.join('\n  + ')}\n- Biện pháp hóa học: ${data.chemSteps}${geminiExtraText ? `\n- Phân tích thêm từ AI: ${geminiExtraText.trim()}` : ''}`;
+        }
+
+        // Hàm gọi Gemini AI siêu tốc, ổn định, xử lý lỗi rõ ràng
+        async function callGeminiWithFallback(payload, isJson = false) {
+            const cleanKey = (GEMINI_API_KEY || '').trim();
+            if (!cleanKey) {
+                throw new Error('Chưa nhập mã GEMINI_API_KEY trong file code HTML!');
+            }
+
+            const fastModels = ['gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash'];
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+                    currentDiagnosisReport = `BÁO CÁO CHẨN ĐOÁN AGRIAI\n- Cây trồng: ${data.crop}\n- Chẩn đoán: ${data.name} (${data.confidence})\n- Mức độ: ${data.severity}\n- Triệu chứng: ${data.symptoms}\n- Nguyên nhân: ${data.cause}\n- Biện pháp sinh học:\n  + ${steps.join('\n  + ')}\n- Biện pháp hóa học: ${data.chemSteps}${geminiExtraText ? `\n- Phân tích thêm từ AI: ${geminiExtraText.trim()}` : ''}`;
+        }
+
+        // Hàm kiểm tra nhanh kết nối API Key (chỉ gửi chữ nên phản hồi trong 1-2 giây)
+        async function testGeminiConnection() {
+            const cleanKey = getActiveApiKey();
+            if (!cleanKey) {
+                showToast('Chưa cấu hình GEMINI_API_KEY trong mã nguồn!', 'warning');
+                return;
+            }
+            const t0 = Date.now();
+            showToast('Đang kiểm tra kết nối tới Google AI...', 'info');
+            try {
+                await callGeminiWithFallback([{ text: 'Trả lời 1 chữ: OK' }]);
+                const sec = ((Date.now() - t0) / 1000).toFixed(1);
+                showToast(`Kết nối thành công! AI phản hồi sau ${sec}s`, 'success');
+            } catch (err) {
+                showToast(`Lỗi kết nối AI: ${err.message}`, 'error');
+            }
+        }
+
+        // Hàm gọi Gemini AI siêu tốc (ưu tiên model nhẹ, tự động chuyển model nếu Google quá tải 503)
+        async function callGeminiWithFallback(partsArray) {
+            const cleanKey = getActiveApiKey();
+            if (!cleanKey) {
+                throw new Error('Chưa cấu hình mã GEMINI_API_KEY trong mã nguồn!');
+            }
+
+            const modelsToTry = [
+                { name: 'gemini-2.5-flash-lite', noThinking: true },
+                { name: 'gemini-2.5-flash', noThinking: true },
+                { name: 'gemini-2.0-flash', noThinking: false },
+                { name: 'gemini-2.0-flash-lite', noThinking: false },
+                { name: 'gemini-flash-latest', noThinking: true }
+            ];
+
+            let lastError = null;
+            const statusSub = document.getElementById('scan-status-sub');
+
+            for (const m of modelsToTry) {
+                if (statusSub) {
+                    statusSub.textContent = `Đang xử lý bằng mô hình ${m.name}...`;
+                }
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${m.name}:generateContent`;
+                const bodyObj = {
+                    contents: [{ parts: partsArray }]
+                };
+
+                // Tắt bước suy nghĩ ngầm giúp mô hình 2.5 trả kết quả nhanh gấp 5 lần
+                if (m.noThinking) {
+                    bodyObj.generationConfig = {
+                        thinkingConfig: { thinkingBudget: 0 }
+                    };
+                }
+
+                // Thử tối đa 2 lần nếu máy chủ báo quá tải tạm thời (503 / high demand)
+                for (let attempt = 1; attempt <= 2; attempt++) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-goog-api-key': cleanKey
+                            },
+                            body: JSON.stringify(bodyObj)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            const msg = data?.error?.message || `HTTP ${response.status}`;
+                            lastError = new Error(msg);
+                            // Nếu sai khóa API thì dừng ngay không cần thử model khác
+                            if (response.status === 401 || response.status === 403 || msg.includes('API key not valid')) {
+                                throw lastError;
+                            }
+                            // Nếu quá tải 503 hoặc 429 thì đợi 800ms rồi thử lại hoặc chuyển model kế tiếp
+                            if ((response.status === 503 || response.status === 429 || msg.toLowerCase().includes('high demand')) && attempt === 1) {
+                                await new Promise(r => setTimeout(r, 800));
+                                continue;
+                            }
+                            break;
+                        }
+
+                        const parts = data.candidates?.[0]?.content?.parts || [];
+                        const text = parts.map(p => p.text || '').join('\n').trim();
+                        if (!text) {
+                            lastError = new Error('Máy chủ AI không trả về nội dung.');
+                            break;
+                        }
+                        return text;
+                    } catch (err) {
+                        lastError = err;
+                        if (err.message && (err.message.includes('API key not valid') || err.message.includes('403') || err.message.includes('401'))) {
+                            throw err;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            throw lastError || new Error('Máy chủ Google AI đang bận, vui lòng thử lại sau vài giây.');
+        }
+
+        // Hàm chính thực hiện quét bệnh từ ảnh tải lên
+        async function runAIDiagnosis() {
+            if (!selectedFileBase64) {
+                showToast('Vui lòng tải lên hình ảnh cây trồng trước khi bấm Phân Tích Bệnh!', 'warning');
+                return;
+            }
+
+            if (!getActiveApiKey()) {
+                showToast('Lỗi: Chưa cấu hình GEMINI_API_KEY trong mã nguồn!', 'error');
+                return;
+            }
+
+            const overlay = document.getElementById('scan-overlay');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const selectedCrop = document.getElementById('crop-type-select').value;
+
+            overlay.classList.remove('hidden');
+            analyzeBtn.disabled = true;
+
+            try {
+                const base64Data = selectedFileBase64.split(',')[1];
+                const cropHint = selectedCrop === 'auto'
+                    ? 'Tự nhận diện chính xác loại cây trồng trong ảnh.'
+                    : `Người dùng gợi ý đây là cây: ${selectedCrop}.`;
+
+                const prompt = `Bạn là Kỹ sư Bảo vệ Thực vật hàng đầu tại Việt Nam. Hãy quan sát thật kỹ hình ảnh này (${cropHint}).
+Nếu ảnh KHÔNG phải cây trồng/lá cây/nông sản, hãy ghi rõ trong trường "name" là "Hình ảnh không phải cây trồng" và hướng dẫn chụp lại.
+Chỉ trả về DUY NHẤT một chuỗi JSON thuần túy (không giải thích thêm, không bọc markdown) theo đúng mẫu sau:
+{
+  "crop": "Tên loại cây trồng",
+  "name": "Tên bệnh hại hoặc sâu hại cụ thể (hoặc 'Cây khỏe mạnh bình thường' nếu không có bệnh)",
+  "confidence": "Tỷ lệ phần trăm tin cậy, ví dụ 95.5%",
+  "severity": "Mức độ nguy hại (Thấp / Trung bình / Cao / Rất cao)",
+  "symptoms": "Mô tả chi tiết triệu chứng quan sát được trên ảnh",
+  "cause": "Nguyên nhân gây bệnh và điều kiện thời tiết phát sinh",
+  "bioSteps": ["Biện pháp canh tác/sinh học 1", "Biện pháp canh tác/sinh học 2", "Biện pháp canh tác/sinh học 3"],
+  "chemSteps": "Tên hoạt chất thuốc bảo vệ thực vật đặc trị khuyến cáo theo nguyên tắc 4 đúng",
+  "extraNote": "Lời khuyên thực tế ngắn gọn giúp nông dân phục hồi vườn cây bền vững"
+}`;
+
+                const rawResponse = await callGeminiWithFallback([
+                    { text: prompt },
+                    { inline_data: { mime_type: 'image/jpeg', data: base64Data } }
+                ]);
+
+                // Trích xuất khối JSON an toàn từ câu trả lời của AI
+                const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('AI trả về định dạng chưa chuẩn JSON. Vui lòng bấm Phân Tích lại.');
+                }
+                const parsed = JSON.parse(jsonMatch[0]);
+
+                displayDiagnosisResult(parsed, parsed.extraNote || '');
+                showToast('Gemini AI đã phân tích xong hình ảnh bệnh cây!', 'success');
+            } catch (err) {
+                console.error('Lỗi AI Diagnosis:', err);
+                showToast(`Lỗi quét bệnh AI: ${err.message}`, 'error');
+            } finally {
+                overlay.classList.add('hidden');
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function copyDiagnosisReport() {
+            if (!currentDiagnosisReport) return;
+            const textarea = document.createElement('textarea');
+            textarea.value = currentDiagnosisReport;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('Đã sao chép phác đồ điều trị vào bộ nhớ tạm!', 'success');
+        }
+
+        // --- 4. ĐỊNH DẠNG THỨ - NGÀY - THÁNG & THỜI TIẾT THỰC TẾ ---
+        let lastRenderedDateKey = '';
+
+        function formatVietnameseFullDate(dateObj) {
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const dayName = days[dateObj.getDay()];
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const yyyy = dateObj.getFullYear();
+            return `${dayName}, ngày ${dd}/${mm}/${yyyy}`;
+        }
+
+        function updateLiveClockAndDate() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${hh}:${min}:${ss}`;
+            const fullDateText = formatVietnameseFullDate(now);
+
+            const heroDateEl = document.getElementById('hero-current-date');
+            const weatherDateEl = document.getElementById('weather-today-full-date');
+            const heroClockEl = document.getElementById('hero-live-clock');
+            const weatherClockEl = document.getElementById('weather-live-clock');
+
+            if (heroDateEl) heroDateEl.textContent = fullDateText;
+            if (weatherDateEl) weatherDateEl.innerHTML = `<i class="fa-regular fa-calendar mr-1.5"></i> ${fullDateText}`;
+            if (heroClockEl) heroClockEl.innerHTML = `<i class="fa-regular fa-clock mr-1.5 text-amber-300"></i> ${timeStr} (Giờ địa phương)`;
+            if (weatherClockEl) weatherClockEl.innerHTML = `<i class="fa-regular fa-clock mr-1.5 text-amber-300"></i> Thời gian thực: <strong class="text-white ml-1">${timeStr}</strong>`;
+
+            // Tự động làm mới danh sách dự báo 5 ngày nếu bước sang ngày mới (00:00:00)
+            const currentDateKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+            if (lastRenderedDateKey && lastRenderedDateKey !== currentDateKey) {
+                lastRenderedDateKey = currentDateKey;
+                fetchLiveWeather(false);
+            }
+            lastRenderedDateKey = currentDateKey;
+        }
+
+        function formatShortDayLabel(dateStr, offsetIndex) {
+            // dateStr dạng YYYY-MM-DD
+            const parts = dateStr.split('-');
+            const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const dayName = days[d.getDay()];
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            if (offsetIndex === 1) return `Ngày mai (${dayName}, ${dd}/${mm})`;
+            return `${dayName}, ngày ${dd}/${mm}`;
+        }
+
+        function renderFallbackForecastWithRealDates() {
+            const now = new Date();
+            const heroDateEl = document.getElementById('hero-current-date');
+            const weatherDateEl = document.getElementById('weather-today-full-date');
+            const fullDateText = formatVietnameseFullDate(now);
+
+            if (heroDateEl) heroDateEl.textContent = fullDateText;
+            if (weatherDateEl) weatherDateEl.innerHTML = `<i class="fa-regular fa-calendar mr-1.5"></i> ${fullDateText}`;
+
+            const listEl = document.getElementById('weather-forecast-list');
+            if (!listEl) return;
+
+            const fallbackSamples = [
+                { max: 31, min: 23, code: 0, desc: 'Trời quang, nắng ấm' },
+                { max: 30, min: 22, code: 2, desc: 'Có mây, nắng nhẹ' },
+                { max: 28, min: 21, code: 61, desc: 'Mưa rào nhẹ rải rác' },
+                { max: 29, min: 22, code: 2, desc: 'Có mây, gió nhẹ' },
+                { max: 31, min: 23, code: 1, desc: 'Nắng ráo thuận lợi' }
+            ];
+
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                const future = new Date(now);
+                future.setDate(now.getDate() + i);
+                const iso = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, '0')}-${String(future.getDate()).padStart(2, '0')}`;
+                const item = fallbackSamples[i - 1];
+                html += `
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-gray-100">
+                        <div class="flex items-center space-x-3">
+                            ${getWeatherIcon(item.code)}
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">${formatShortDayLabel(iso, i)}</div>
+                                <div class="text-xs text-gray-500">${item.desc}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-gray-900">${item.max}°C</span>
+                            <div class="text-xs text-gray-500">${item.min}°C</div>
+                        </div>
+                    </div>
+                `;
+            }
+            listEl.innerHTML = html;
+        }
+
+        async function fetchLiveWeather(manual = false) {
+            const icon = document.getElementById('weather-refresh-icon');
+            if (icon && manual) icon.classList.add('fa-spin');
+
+            // Hiển thị ngay Thứ - Ngày - Tháng chuẩn xác trước khi gọi API
+            renderFallbackForecastWithRealDates();
+
+            try {
+                // Tọa độ Thăng Bình, Đà Nẵng
+                const url = 'https://api.open-meteo.com/v1/forecast?latitude=15.74&longitude=108.35&current=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FBangkok';
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Không thể tải dữ liệu khí tượng');
+                const data = await res.json();
+
+                if (data.current) {
+                    const temp = Math.round(data.current.temperature_2m);
+                    const hum = data.current.relative_humidity_2m;
+                    const wind = Math.round(data.current.wind_speed_10m);
+                    const rain = data.current.precipitation_probability ?? 15;
+                    const cond = getWeatherDesc(data.current.weather_code);
+
+                    const heroTemp = document.getElementById('hero-weather-temp');
+                    const heroDesc = document.getElementById('hero-weather-desc');
+                    if (heroTemp) heroTemp.textContent = `${temp}°C`;
+                    if (heroDesc) heroDesc.textContent = `${cond} • Độ ẩm ${hum}%`;
+
+                    const wTemp = document.getElementById('weather-temp');
+                    const wCond = document.getElementById('weather-condition-text');
+                    const wHum = document.getElementById('weather-humidity');
+                    const wWind = document.getElementById('weather-wind');
+                    const wRain = document.getElementById('weather-rain');
+                    const wAdvice = document.getElementById('weather-advice');
+                    const wBadge = document.getElementById('weather-badge-time');
+
+                    if (wTemp) wTemp.textContent = `${temp}°C`;
+                    if (wCond) wCond.textContent = cond;
+                    if (wHum) wHum.textContent = `${hum}%`;
+                    if (wWind) wWind.textContent = `${wind} km/h`;
+                    if (wRain) wRain.textContent = `${rain}%`;
+                    if (wBadge) {
+                        const nowSync = new Date();
+                        const syncTime = `${String(nowSync.getHours()).padStart(2, '0')}:${String(nowSync.getMinutes()).padStart(2, '0')}`;
+                        wBadge.textContent = `Cập nhật ${syncTime}`;
+                    }
+                    if (wAdvice) {
+                        if (rain > 60) {
+                            wAdvice.textContent = `Xác suất mưa cao (${rain}%). Bà con tạm hoãn phun thuốc BVTV, khơi thông rãnh thoát nước ruộng lúa và vườn hồ tiêu để tránh ngập úng cục bộ.`;
+                        } else if (hum >= 80) {
+                            wAdvice.textContent = `Độ ẩm không khí cao (${hum}%) thuận lợi cho nấm đạo ôn lá lúa và sương mai phát triển. Bà con nên thăm đồng kiểm tra và hạn chế bón thừa đạm.`;
+                        } else {
+                            wAdvice.textContent = `Thời tiết thuận lợi (${temp}°C, độ ẩm ${hum}%). Bà con có thể tiến hành bón phân thúc, làm cỏ sục bùn hoặc phun chế phẩm sinh học phòng trừ sâu bệnh.`;
+                        }
+                    }
+                }
+
+                if (data.daily && data.daily.time) {
+                    const listEl = document.getElementById('weather-forecast-list');
+                    if (listEl) {
+                        let html = '';
+                        for (let i = 1; i <= 5; i++) {
+                            if (!data.daily.time[i]) break;
+                            const dateStr = data.daily.time[i];
+                            const maxT = Math.round(data.daily.temperature_2m_max[i]);
+                            const minT = Math.round(data.daily.temperature_2m_min[i]);
+                            const code = data.daily.weather_code[i];
+                            const rainProb = data.daily.precipitation_probability_max?.[i] ?? 10;
+                            const desc = getWeatherDesc(code);
+                            const iconHtml = getWeatherIcon(code);
+                            html += `
+                                <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-gray-100 hover:border-blue-200 transition-colors">
+                                    <div class="flex items-center space-x-3">
+                                        ${iconHtml}
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-900">${formatShortDayLabel(dateStr, i)}</div>
+                                            <div class="text-xs text-gray-500">${desc} • Mưa ${rainProb}%</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-sm font-extrabold text-gray-900">${maxT}°C</span>
+                                        <div class="text-xs text-gray-500">${minT}°C</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        if (html) listEl.innerHTML = html;
+                    }
+                }
+
+                if (manual) showToast('Đã cập nhật dữ liệu thời tiết & thứ ngày mới nhất!', 'success');
+            } catch (err) {
+                if (manual) showToast('Đang hiển thị lịch thời tiết theo ngày hiện tại.', 'info');
+            } finally {
+                if (icon && manual) {
+                    setTimeout(() => icon.classList.remove('fa-spin'), 400);
+                }
+            }
+        }
+
+        function getWeatherDesc(code) {
+            if (code === 0) return 'Trời quang, nắng đẹp';
+            if (code <= 3) return 'Có mây, nắng nhẹ';
+            if (code <= 48) return 'Sương mù nhẹ buổi sáng';
+            if (code <= 67) return 'Có mưa rào nhẹ';
+            if (code <= 82) return 'Mưa rào rải rác';
+            return 'Có dông vài nơi';
+        }
+
+        function getWeatherIcon(code) {
+            if (code === 0) return '<div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0"><i class="fa-solid fa-sun"></i></div>';
+            if (code <= 3) return '<div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center shrink-0"><i class="fa-solid fa-cloud-sun"></i></div>';
+            return '<div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0"><i class="fa-solid fa-cloud-rain"></i></div>';
+        }
+
+        // --- 5. QUẢN LÝ LỊCH CÔNG TÁC ---
+        function filterTasks(category, btnEl) {
+            document.querySelectorAll('.task-filter').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            if (btnEl) {
+                btnEl.classList.add('bg-emerald-600', 'text-white');
+                btnEl.classList.remove('bg-gray-100', 'text-gray-600');
+            }
+
+            document.querySelectorAll('.task-item').forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        function toggleTaskComplete(checkbox) {
+            const title = checkbox.parentElement.querySelector('h4');
+            if (checkbox.checked) {
+                title.classList.add('line-through', 'opacity-60');
+            } else {
+                title.classList.remove('line-through', 'opacity-60');
+            }
+        }
+
+        function openAddTaskModal() {
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function closeAddTaskModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+        }
+
+        function handleAddTask(e) {
+            e.preventDefault();
+            const title = document.getElementById('new-task-title').value.trim();
+            const cat = document.getElementById('new-task-cat').value;
+            const desc = document.getElementById('new-task-desc').value.trim() || 'Ghi chú công việc canh tác do nhà nông tự thêm.';
+
+            const catLabels = {
+                lua: { label: 'Cây Lúa', bg: 'bg-emerald-100 text-emerald-800' },
+                hoamau: { label: 'Đậu phộng & Hoa màu', bg: 'bg-amber-100 text-amber-800' },
+                cayanqua: { label: 'Hồ tiêu & Cây ăn quả', bg: 'bg-teal-100 text-teal-800' }
+            };
+            const meta = catLabels[cat] || catLabels.lua;
+
+            const list = document.getElementById('task-list');
+            const newItem = document.createElement('div');
+            newItem.className = 'task-item p-4 rounded-2xl border border-gray-200 bg-white flex items-start justify-between gap-4';
+            newItem.dataset.category = cat;
+            newItem.innerHTML = `
+                <div class="flex items-start space-x-3.5">
+                    <input type="checkbox" onchange="toggleTaskComplete(this)" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${meta.bg}">${meta.label}</span>
+                        <h4 class="text-sm font-bold text-gray-900 mt-1">${title}</h4>
+                        <p class="text-xs text-gray-600 mt-1">${desc}</p>
+                    </div>
+                </div>
+                <span class="text-xs font-bold text-emerald-700 whitespace-nowrap">Mới thêm</span>
+            `;
+            list.prepend(newItem);
+
+            e.target.reset();
+            closeAddTaskModal();
+            showToast('Đã thêm công việc mới vào lịch canh tác!', 'success');
+        }
+
+        // --- 6. HỎI ĐÁP CÙNG KỸ SƯ NÔNG NGHIỆP AI ---
+        async function handlePostQuestion(e) {
+            e.preventDefault();
+            const author = document.getElementById('q-author').value.trim();
+            const category = document.getElementById('q-category').value;
+            const content = document.getElementById('q-content').value.trim();
+
+            if (!getActiveApiKey()) {
+                showToast('Lỗi: Chưa cấu hình GEMINI_API_KEY trong mã nguồn!', 'error');
+                return;
+            }
+
+            const feed = document.getElementById('community-feed');
+            const initial = author.charAt(0).toUpperCase() || 'N';
+            const postId = 'post-' + Date.now();
+            const nowLabel = formatVietnameseFullDate(new Date());
+
+            const card = document.createElement('div');
+            card.id = postId;
+            card.className = 'bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-purple-200 space-y-4';
+            card.innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold">${initial}</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-900">${author}</h4>
+                            <p class="text-[11px] text-gray-500">Nông dân • ${category} • ${nowLabel}</p>
+                        </div>
+                    </div>
+                    <span class="ai-status-badge px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">
+                        <i class="fa-solid fa-spinner fa-spin mr-1"></i> Kỹ sư AI đang trả lời...
+                    </span>
+                </div>
+                <p class="text-sm text-gray-700 leading-relaxed">${content}</p>
+                <div class="ai-reply-box bg-purple-50/60 rounded-2xl p-4 border border-purple-100 space-y-2">
+                    <div class="flex items-center space-x-2 text-xs font-bold text-purple-700">
+                        <i class="fa-solid fa-user-doctor"></i>
+                        <span>Kỹ sư Nông nghiệp AI phản hồi trực tuyến:</span>
+                    </div>
+                    <p class="ai-reply-text text-xs text-gray-600 italic leading-relaxed">Đang phân tích câu hỏi và tra cứu quy trình kỹ thuật nông nghiệp...</p>
+                </div>
+            `;
+            feed.prepend(card);
+            e.target.reset();
+
+            try {
+                const prompt = `Bạn là Kỹ sư Nông nghiệp giàu kinh nghiệm tại Việt Nam. Hãy trả lời rõ ràng, thực tế, dễ hiểu và ưu tiên an toàn sinh học cho câu hỏi sau của nông dân (${author}, chủ đề: ${category}): "${content}"`;
+                const reply = await callGeminiWithFallback([
+                    { text: prompt }
+                ]);
+
+                const badge = card.querySelector('.ai-status-badge');
+                const replyText = card.querySelector('.ai-reply-text');
+                badge.className = 'ai-status-badge px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full';
+                badge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Kỹ sư AI đã giải đáp';
+                replyText.className = 'ai-reply-text text-xs sm:text-sm text-gray-800 whitespace-pre-line leading-relaxed';
+                replyText.textContent = reply;
+                showToast('Kỹ sư AI đã giải đáp câu hỏi của bạn!', 'success');
+            } catch (err) {
+                const badge = card.querySelector('.ai-status-badge');
+                const replyText = card.querySelector('.ai-reply-text');
+                badge.className = 'ai-status-badge px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full';
+                badge.innerHTML = '<i class="fa-solid fa-circle-xmark mr-1"></i> Lỗi kết nối AI';
+                replyText.className = 'ai-reply-text text-xs text-rose-600 leading-relaxed';
+                replyText.textContent = `Không gọi được Gemini AI: ${err.message}`;
+                showToast(`Không gọi được Gemini AI: ${err.message}`, 'error');
+            }
+        }
+
+        // --- 7. KHỞI TẠO ỨNG DỤNG ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderSampleButtons();
+            updateLiveClockAndDate();
+            setInterval(updateLiveClockAndDate, 1000);
+            fetchLiveWeather(false);
+            // Tự động đồng bộ lại thời tiết thực tế mỗi 5 phút
+            setInterval(() => fetchLiveWeather(false), 300000);
+        });
+    </script>
+</body>
+</html>
